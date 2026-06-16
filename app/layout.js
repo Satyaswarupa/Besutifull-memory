@@ -1,6 +1,6 @@
 import { Roboto, Dancing_Script } from "next/font/google";
 import "./globals.css";
-import LoveBackground from "@/components/LoveBackground";
+import DynamicBackground from "@/components/DynamicBackground";
 import Navbar from "@/components/Navbar";
 import { getCurrentUserId } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
@@ -27,16 +27,18 @@ export default async function RootLayout({ children }) {
   const userId = await getCurrentUserId();
 
   let userImage = null;
+  let backgroundAnimation = "hearts";
   if (userId) {
     await connectDB();
-    const u = await User.findById(userId).select("profileImage").lean();
+    const u = await User.findById(userId).select("profileImage backgroundAnimation").lean();
     userImage = u?.profileImage || null;
+    backgroundAnimation = u?.backgroundAnimation || "hearts";
   }
 
   return (
     <html lang="en" className={`${roboto.variable} ${dancing.variable} h-full`}>
       <body className="min-h-full flex flex-col">
-        <LoveBackground />
+        <DynamicBackground animation={backgroundAnimation} />
         <Navbar loggedIn={!!userId} userImage={userImage} />
         <main className="flex-1">{children}</main>
       </body>

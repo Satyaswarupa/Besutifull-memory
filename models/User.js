@@ -14,6 +14,11 @@ const UserSchema = new mongoose.Schema(
       default: "anniversary",
     },
     memoryDate: { type: Date, required: true },
+    backgroundAnimation: {
+      type: String,
+      enum: ["hearts", "stars", "bubbles", "fireflies"],
+      default: "hearts",
+    },
   },
   { timestamps: true }
 );

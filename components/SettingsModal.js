@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import BackgroundPicker from "@/components/BackgroundPicker";
 
 function PencilIcon() {
   return (
@@ -65,6 +66,8 @@ export default function SettingsModal({ onClose }) {
   const [memoryLabel, setMemoryLabel] = useState("");
   const [memoryDate, setMemoryDate] = useState("");
   const [photoUrl, setPhotoUrl] = useState(null);
+  const [backgroundAnimation, setBackgroundAnimation] = useState("hearts");
+  const [savingBg, setSavingBg] = useState(false);
 
   const [editingField, setEditingField] = useState(null);
   const [tempName, setTempName] = useState("");
@@ -86,6 +89,7 @@ export default function SettingsModal({ onClose }) {
           user.memoryDate ? new Date(user.memoryDate).toISOString().slice(0, 10) : ""
         );
         setPhotoUrl(user.profileImage || null);
+        setBackgroundAnimation(user.backgroundAnimation || "hearts");
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -160,6 +164,22 @@ export default function SettingsModal({ onClose }) {
     finally  { setSavingPhoto(false); }
   }
 
+  async function saveBackground(animId) {
+    setBackgroundAnimation(animId);
+    setSavingBg(true);
+    try {
+      const data = new FormData();
+      data.append("backgroundAnimation", animId);
+      data.append("name", name);
+      data.append("bio", bio);
+      data.append("memoryLabel", memoryLabel);
+      data.append("memoryDate", memoryDate);
+      await fetch("/api/user", { method: "PATCH", body: data });
+      router.refresh();
+    } catch { /* silent */ }
+    finally { setSavingBg(false); }
+  }
+
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/login");
@@ -231,6 +251,19 @@ export default function SettingsModal({ onClose }) {
                 <input className="input-field text-sm" placeholder="Label (e.g. Anniversary)" value={tempLabel} onChange={(e) => setTempLabel(e.target.value)} autoFocus />
                 <input type="date" className="input-field text-sm" value={tempDate} onChange={(e) => setTempDate(e.target.value)} />
               </FieldRow>
+            </div>
+
+            {/* Background Animation */}
+            <div className="px-5 pt-1 pb-3 border-t border-white/10 mt-1">
+              <div className="flex items-center justify-between mb-2 pt-3">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-white/35">
+                  Background
+                </span>
+                {savingBg && (
+                  <span className="text-[10px] text-white/40">Saving…</span>
+                )}
+              </div>
+              <BackgroundPicker value={backgroundAnimation} onChange={saveBackground} />
             </div>
 
             {error && <p className="px-5 pb-2 text-xs text-red-400 text-center">{error}</p>}

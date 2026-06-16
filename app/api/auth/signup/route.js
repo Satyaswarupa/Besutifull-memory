@@ -14,6 +14,7 @@ export async function POST(request) {
     const memoryType = formData.get("memoryType")?.toString() || "anniversary";
     const memoryLabel = formData.get("memoryLabel")?.toString() || "Our Special Day";
     const memoryDate = formData.get("memoryDate")?.toString();
+    const backgroundAnimation = formData.get("backgroundAnimation")?.toString() || "hearts";
     const profileImage = formData.get("profileImage");
 
     if (!name || !email || !password || !memoryDate) {
@@ -48,6 +49,7 @@ export async function POST(request) {
       memoryType,
       memoryLabel,
       memoryDate: new Date(memoryDate),
+      backgroundAnimation,
     });
 
     const token = signToken({ userId: user._id.toString() });

@@ -31,6 +31,7 @@ export async function PATCH(request) {
     const name = formData.get("name");
     const memoryLabel = formData.get("memoryLabel");
     const memoryDate = formData.get("memoryDate");
+    const backgroundAnimation = formData.get("backgroundAnimation");
     const profileImage = formData.get("profileImage");
 
     await connectDB();
@@ -43,6 +44,7 @@ export async function PATCH(request) {
     if (name) user.name = name.toString().trim();
     if (memoryLabel) user.memoryLabel = memoryLabel.toString();
     if (memoryDate) user.memoryDate = new Date(memoryDate.toString());
+    if (backgroundAnimation) user.backgroundAnimation = backgroundAnimation.toString();
 
     if (profileImage && typeof profileImage === "object" && profileImage.size > 0) {
       const buffer = Buffer.from(await profileImage.arrayBuffer());

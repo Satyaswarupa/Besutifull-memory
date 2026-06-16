@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import BackgroundPicker from "@/components/BackgroundPicker";
 
 const MEMORY_TYPES = [
   { value: "anniversary", label: "Anniversary 💞", placeholder: "Our Anniversary" },
@@ -20,6 +21,7 @@ export default function SignupPage() {
     memoryType: "anniversary",
     memoryLabel: "",
     memoryDate: "",
+    backgroundAnimation: "hearts",
   });
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -60,6 +62,7 @@ export default function SignupPage() {
           "Our Special Day"
       );
       data.append("memoryDate", form.memoryDate);
+      data.append("backgroundAnimation", form.backgroundAnimation);
       if (imageFile) data.append("profileImage", imageFile);
 
       const res = await fetch("/api/auth/signup", { method: "POST", body: data });
@@ -187,6 +190,14 @@ export default function SignupPage() {
                 onChange={(e) => update("memoryDate", e.target.value)}
               />
             </div>
+          </div>
+
+          <div className="pt-2 border-t border-rose/20">
+            <p className="text-sm font-semibold mb-2 mt-3">Pick your background ✨</p>
+            <BackgroundPicker
+              value={form.backgroundAnimation}
+              onChange={(v) => update("backgroundAnimation", v)}
+            />
           </div>
 
           {error && <p className="text-sm text-red-500 text-center">{error}</p>}
