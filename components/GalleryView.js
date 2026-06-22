@@ -40,22 +40,34 @@ export default function GalleryView({ initialPosts }) {
   const [adding, setAdding] = useState(false);
   const [activeIndex, setActiveIndex] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(null);
+  const [uploadError, setUploadError] = useState("");
 
   async function handleUpload(formData) {
     setUploadProgress(0);
+    setUploadError("");
     try {
       const json = await uploadWithProgress(formData, setUploadProgress);
       setUploadProgress(100);
       setPosts((prev) => [json.post, ...prev]);
       setTimeout(() => setUploadProgress(null), 700);
-    } catch {
+    } catch (err) {
       setUploadProgress(null);
+      setUploadError(err.message || "Upload failed. Please try again.");
     }
   }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12">
       <UploadProgress progress={uploadProgress} />
+
+      {uploadError && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600 animate-pop-in">
+          <span>{uploadError}</span>
+          <button onClick={() => setUploadError("")} className="text-red-400 hover:text-red-600 shrink-0" aria-label="Dismiss">
+            ✕
+          </button>
+        </div>
+      )}
 
       <div className="flex items-center justify-between mb-6">
         <div>

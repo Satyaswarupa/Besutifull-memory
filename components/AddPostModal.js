@@ -2,24 +2,58 @@
 
 import { useState } from "react";
 
+const MAX_DIMENSION = 1920;
+const JPEG_QUALITY = 0.82;
+const SKIP_COMPRESSION_BELOW = 1.5 * 1024 * 1024; // already-small files are left alone
+
+async function compressImage(file) {
+  if (file.size <= SKIP_COMPRESSION_BELOW) return file;
+
+  try {
+    const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
+    const width = Math.round(bitmap.width * scale);
+    const height = Math.round(bitmap.height * scale);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    canvas.getContext("2d").drawImage(bitmap, 0, 0, width, height);
+    bitmap.close?.();
+
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY));
+    if (!blob || blob.size >= file.size) return file;
+
+    return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+  } catch {
+    return file;
+  }
+}
+
 export default function AddPostModal({ onClose, onUploadStart }) {
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
+  const [compressing, setCompressing] = useState(false);
 
-  function handleImageChange(e) {
+  async function handleImageChange(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setImageFile(file);
-    setPreview(URL.createObjectURL(file));
+    setError("");
+    setCompressing(true);
+    const finalFile = await compressImage(file);
+    setImageFile(finalFile);
+    setPreview(URL.createObjectURL(finalFile));
+    setCompressing(false);
   }
 
   function handleSubmit(e) {
     e.preventDefault();
     setError("");
 
+    if (compressing) return;
     if (!imageFile) { setError("Please choose a photo to add."); return; }
     if (!title.trim()) { setError("Please give this memory a title."); return; }
 
@@ -42,7 +76,12 @@ export default function AddPostModal({ onClose, onUploadStart }) {
             htmlFor="postImage"
             className="block w-full aspect-square rounded-2xl border-2 border-dashed border-rose/30 bg-white/60 flex items-center justify-center cursor-pointer overflow-hidden hover:border-rose/60 transition"
           >
-            {preview ? (
+            {compressing ? (
+              <div className="text-center text-foreground/50">
+                <div className="text-4xl mb-2 animate-pulse">📷</div>
+                <p className="text-sm">Preparing photo…</p>
+              </div>
+            ) : preview ? (
               <img src={preview} alt="Preview" className="w-full h-full object-cover" />
             ) : (
               <div className="text-center text-foreground/50">
@@ -86,8 +125,8 @@ export default function AddPostModal({ onClose, onUploadStart }) {
             <button type="button" onClick={onClose} className="btn-secondary flex-1">
               Cancel
             </button>
-            <button type="submit" className="btn-primary flex-1">
-              Add Memory
+            <button type="submit" disabled={compressing} className="btn-primary flex-1">
+              {compressing ? "Preparing…" : "Add Memory"}
             </button>
           </div>
         </form>
